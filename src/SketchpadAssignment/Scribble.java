@@ -16,6 +16,7 @@ public class Scribble implements Graphic {
         currX = x;
         currY = y;
         gc.lineTo(currX, currY);
+        this.Draw();
     }
 
     public void Draw() {

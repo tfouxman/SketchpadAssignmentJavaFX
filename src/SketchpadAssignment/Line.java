@@ -25,10 +25,15 @@ public class Line implements Graphic {
         endY = y;
     }
 
+    public Point getStart() {
+        return new Point(startX, startY);
+    }
+
     public void removeGraphic(Graphic g) {
 
     }
     public void addGraphic(Graphic g) {
 
     }
+
 }

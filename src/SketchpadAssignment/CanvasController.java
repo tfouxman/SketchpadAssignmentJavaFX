@@ -8,10 +8,12 @@ import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.transform.Scale;
 
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -58,6 +60,12 @@ public class CanvasController {
     private ToggleButton circle;
 
     @FXML
+    private ToggleButton openPolygon;
+
+    @FXML
+    private ToggleButton closedPolygon;
+
+    @FXML
     private ToggleButton eraser;
 
     private int size;
@@ -65,7 +73,12 @@ public class CanvasController {
 
     public void initialize() { // Automatic call to FXML Loader when controller class is initiated
         GraphicsContext gc = canvas.getGraphicsContext2D();
+
         gc.setLineWidth((int) Math.round(brushSize.getValue()));
+        gc.setStroke(cpLine.getValue());
+        gc.setFill(cpFill.getValue());
+
+
         select.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.LOCATION_ARROW));
         select.setTooltip(new Tooltip("Select"));
         select.setUserData(-1);
@@ -74,11 +87,16 @@ public class CanvasController {
         brush.setTooltip(new Tooltip("Scribble"));
         brush.setUserData(0);
 
-        line.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.ILS));
+        Node lineIcon = GlyphsDude.createIcon(FontAwesomeIcons.SQUARE);
+        lineIcon.getTransforms().add(new Scale(0.2, 1, 0.5));
+        lineIcon.setRotate(45);
+        line.setGraphic(lineIcon);
         line.setTooltip(new Tooltip("Line"));
         line.setUserData(1);
 
-        rectangle.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.PENCIL_SQUARE_ALT));
+        Node rectIcon = GlyphsDude.createIcon(FontAwesomeIcons.SQUARE_ALT);
+        rectIcon.getTransforms().add(new Scale(1.3, 0.8, 0.5));
+        rectangle.setGraphic(rectIcon);
         rectangle.setTooltip(new Tooltip("Rectangle"));
         rectangle.setUserData(2);
 
@@ -86,17 +104,27 @@ public class CanvasController {
         square.setTooltip(new Tooltip("Square"));
         square.setUserData(3);
 
-        ellipse.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.ERASER));
+        Node ellIcon = GlyphsDude.createIcon(FontAwesomeIcons.CIRCLE_THIN);
+        ellIcon.getTransforms().add(new Scale(1.3, 0.8, 0.5));
+        ellipse.setGraphic(ellIcon);
         ellipse.setTooltip(new Tooltip("Ellipse"));
         ellipse.setUserData(4);
 
-        circle.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.CIRCLE));
+        circle.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.CIRCLE_THIN));
         circle.setTooltip(new Tooltip("Circle"));
         circle.setUserData(5);
 
+        openPolygon.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.CIRCLE_THIN));
+        openPolygon.setTooltip(new Tooltip("Circle"));
+        openPolygon.setUserData(6);
+
+        closedPolygon.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.CIRCLE_THIN));
+        closedPolygon.setTooltip(new Tooltip("Circle"));
+        closedPolygon.setUserData(7);
+
         eraser.setGraphic(GlyphsDude.createIcon(FontAwesomeIcons.ERASER));
         eraser.setTooltip(new Tooltip("Eraser"));
-        eraser.setUserData(6);
+        eraser.setUserData(8);
 
         Scribble scribble = new Scribble(gc);
         Line line = new Line(gc);
@@ -104,6 +132,8 @@ public class CanvasController {
         Square square = new Square(gc);
         Circle circle = new Circle(gc);
         Ellipse ellipse = new Ellipse(gc);
+        OpenPolygon opPoly = new OpenPolygon(gc);
+        ClosedPolygon clPoly = new ClosedPolygon(gc);
         Eraser eraser = new Eraser(gc);
 
         brushSizeText.setAlignment(Pos.CENTER);
@@ -145,99 +175,100 @@ public class CanvasController {
         });
 
         canvas.setOnMousePressed(e->{
-            if(mode == 0) {
+            if(mode == 0) { // Scribble
                 scribble.startPath();
                 scribble.setPoint(e.getX(), e.getY());
             }
             else if(mode == 1) {
-                line.setStart(e.getX(), e.getY());
+                line.setStart(e.getX(), e.getY()); // Line
             }
-            else if(mode == 2) {
-//                gc.setStroke(cpLine.getValue());
-//                gc.setFill(cpFill.getValue());
-//                rect.setX(e.getX());
-//                rect.setY(e.getY());
+            else if(mode == 2) { // Rectangle
+                rect.setStart(e.getX(), e.getY());
             }
-            else if(mode == 4) {
-//                gc.setStroke(cpLine.getValue());
-//                gc.setFill(cpFill.getValue());
-//                elps.setCenterX(e.getX());
-//                elps.setCenterY(e.getY());
+            else if(mode == 3) { // Square
+
+                square.setStart(e.getX(), e.getY());
+
+            } else if(mode == 4) { // Ellipse
+
+                ellipse.setStart(e.getX(), e.getY());
+
             }
-            else if(mode == 5) {
-//                gc.setStroke(cpLine.getValue());
-//                gc.setFill(cpFill.getValue());
-//                circ.setCenterX(e.getX());
-//                circ.setCenterY(e.getY());
+            else if(mode == 5) { // Circle
+
+                circle.setStart(e.getX(), e.getY());
+
+            } else if(mode == 6) { // Open
+
+                if (e.isPrimaryButtonDown()) {
+                    opPoly.setPoint(e.getX(), e.getY());
+                    opPoly.Draw();
+                }
+                else if (e.isSecondaryButtonDown()) {
+                    opPoly.reset();
+                }
+
+            } else if(mode == 7) { // Closed
+
+                if (e.isPrimaryButtonDown()) {
+                    clPoly.setPoint(e.getX(), e.getY());
+                    clPoly.Draw();
+                }
+                else if (e.isSecondaryButtonDown()) {
+                    clPoly.reset();
+                }
+
             }
-            else if(mode == 6) {
+            else if(mode == 8) { // Eraser
                 double lineWidth = gc.getLineWidth();
                 gc.clearRect(e.getX() - lineWidth / 2, e.getY() - lineWidth / 2, lineWidth, lineWidth);
             }
         });
 
         canvas.setOnMouseDragged(e->{
-            if(mode == 0) {
+            if(mode == 0) { // Scribble
                 scribble.setPoint(e.getX(),e.getY());
                 scribble.Draw();
             }
-            else if(mode == 6){
+            else if(mode == 8){ // Eraser
                 double lineWidth = gc.getLineWidth();
                 gc.clearRect(e.getX() - lineWidth / 2, e.getY() - lineWidth / 2, lineWidth, lineWidth);
             }
         });
 
         canvas.setOnMouseReleased(e-> {
-                    if (mode == 0) {
+                    if (mode == 0) { // Scribble
+
                         scribble.setPoint(e.getX(), e.getY());
                         scribble.Draw();
                         scribble.endPath();
-                    } else if (mode == 1) {
+
+                    } else if (mode == 1) { // Line
+
                         line.setEnd(e.getX(), e.getY());
                         line.Draw();
-                    } else if (mode == 2) {
-//                        rect.setWidth(Math.abs((e.getX() - rect.getX())));
-//                        rect.setHeight(Math.abs((e.getY() - rect.getY())));
-//                        //rect.setX((rect.getX() > e.getX()) ? e.getX(): rect.getX());
-//                        if (rect.getX() > e.getX()) {
-//                            rect.setX(e.getX());
-//                        }
-//                        //rect.setY((rect.getY() > e.getY()) ? e.getY(): rect.getY());
-//                        if (rect.getY() > e.getY()) {
-//                            rect.setY(e.getY());
-//                        }
-//
-//                        gc.fillRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
-//                        gc.strokeRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 
-                    } else if (mode == 4) {
-//                        elps.setRadiusX(Math.abs(e.getX() - elps.getCenterX()));
-//                        elps.setRadiusY(Math.abs(e.getY() - elps.getCenterY()));
-//
-//                        if (elps.getCenterX() > e.getX()) {
-//                            elps.setCenterX(e.getX());
-//                        }
-//                        if (elps.getCenterY() > e.getY()) {
-//                            elps.setCenterY(e.getY());
-//                        }
-//
-//                        gc.strokeOval(elps.getCenterX(), elps.getCenterY(), elps.getRadiusX(), elps.getRadiusY());
-//                        gc.fillOval(elps.getCenterX(), elps.getCenterY(), elps.getRadiusX(), elps.getRadiusY());
+                    } else if (mode == 2) { // Rectangle
 
-                    } else if (mode == 5) {
-//                        circ.setRadius((Math.abs(e.getX() - circ.getCenterX()) + Math.abs(e.getY() - circ.getCenterY())) / 2);
-//
-//                        if (circ.getCenterX() > e.getX()) {
-//                            circ.setCenterX(e.getX());
-//                        }
-//                        if (circ.getCenterY() > e.getY()) {
-//                            circ.setCenterY(e.getY());
-//                        }
-//
-//                        gc.fillOval(circ.getCenterX(), circ.getCenterY(), circ.getRadius(), circ.getRadius());
-//                        gc.strokeOval(circ.getCenterX(), circ.getCenterY(), circ.getRadius(), circ.getRadius());
+                        rect.setEnd(e.getX(), e.getY());
+                        rect.Draw();
 
-                    } else if(mode == 6) {
+                    } else if (mode == 3) { // Square
+
+                        square.setEnd(e.getX(), e.getY());
+                        square.Draw();
+
+                    } else if (mode == 4) { // Ellipse
+
+                        ellipse.setEnd(e.getX(), e.getY());
+                        ellipse.Draw();
+
+                    } else if (mode == 5) { // Circle
+//
+                        circle.setEnd(e.getX(), e.getY());
+                        circle.Draw();
+
+                    } else if(mode == 8) {
                         double lineWidth = gc.getLineWidth();
                         gc.clearRect(e.getX() - lineWidth / 2, e.getY() - lineWidth / 2, lineWidth, lineWidth);
                     }
