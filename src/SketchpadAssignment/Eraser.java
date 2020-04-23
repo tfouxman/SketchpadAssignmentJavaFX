@@ -2,7 +2,7 @@ package SketchpadAssignment;
 
 import javafx.scene.canvas.GraphicsContext;
 
-public class Eraser implements Graphic {
+public class Eraser {
 
     private GraphicsContext gc;
 
