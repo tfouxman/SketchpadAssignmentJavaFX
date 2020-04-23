@@ -145,7 +145,18 @@ public class CanvasController {
                 System.out.println("Paste...");
                 try {
                     Graphic newG = (Graphic)clipBoard.clone();
-                    if (newG.getClass() == Line.class) {
+                    if (newG.getClass() == Scribble.class) {
+                        Scribble temp = (Scribble) newG;
+                        double xDiff, yDiff;
+                        xDiff = ctxMenu.x - temp.getPoints().get(0).x;
+                        yDiff =ctxMenu.y - temp.getPoints().get(0).y;
+                        for ( Point p : temp.getPoints()
+                        ) {
+                            p.x = p.x + xDiff;
+                            p.y = p.y + yDiff;
+                        }
+                    }
+                    else if (newG.getClass() == Line.class) {
 
                         Line temp = (Line) newG;
                         temp.setEnd(temp.getEnd().x + (ctxMenu.x - temp.getStart().x),
@@ -197,8 +208,8 @@ public class CanvasController {
         undo.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                graphics.clear();
                 redoHistory.push(cloneGraphics());
+                graphics.clear();
                 graphics = undoHistory.pop();
                 clear();
                 redraw(gc);
@@ -210,6 +221,8 @@ public class CanvasController {
             public void handle(ActionEvent event) {
                 System.out.println("Redo...");
                 graphics = redoHistory.pop();
+                clear();
+                redraw(gc);
             }
         });
 
